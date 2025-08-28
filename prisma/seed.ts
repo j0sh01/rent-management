@@ -6,57 +6,22 @@ const prisma = new PrismaClient()
 async function main() {
   console.log("🌱 Seeding database...")
 
-  // Create admin user
-  const adminPassword = await bcrypt.hash("password123", 10)
-  const admin = await prisma.user.upsert({
-    where: { email: "admin@rentflow.com" },
-    update: {},
-    create: {
+  // Create users
+  const adminUser = await prisma.user.create({
+    data: {
       email: "admin@rentflow.com",
-      password: adminPassword,
       name: "Admin User",
+      password: await bcrypt.hash("password123", 10),
       role: "ADMIN",
-      phone: "+1234567890",
     },
   })
 
-  // Create landlord user
-  const landlordPassword = await bcrypt.hash("landlord123", 10)
-  const landlord = await prisma.user.upsert({
-    where: { email: "landlord@rentflow.com" },
-    update: {},
-    create: {
+  const landlordUser = await prisma.user.create({
+    data: {
       email: "landlord@rentflow.com",
-      password: landlordPassword,
       name: "John Landlord",
+      password: await bcrypt.hash("landlord123", 10),
       role: "LANDLORD",
-      phone: "+1234567891",
-    },
-  })
-
-  // Create tenant users
-  const tenantPassword = await bcrypt.hash("tenant123", 10)
-  const tenant1 = await prisma.user.upsert({
-    where: { email: "tenant1@example.com" },
-    update: {},
-    create: {
-      email: "tenant1@example.com",
-      password: tenantPassword,
-      name: "Alice Johnson",
-      role: "TENANT",
-      phone: "+1234567892",
-    },
-  })
-
-  const tenant2 = await prisma.user.upsert({
-    where: { email: "tenant2@example.com" },
-    update: {},
-    create: {
-      email: "tenant2@example.com",
-      password: tenantPassword,
-      name: "Bob Smith",
-      role: "TENANT",
-      phone: "+1234567893",
     },
   })
 
@@ -71,14 +36,14 @@ async function main() {
       type: "APARTMENT",
       bedrooms: 2,
       bathrooms: 1.5,
-      squareFeet: 850,
-      rent: 2500,
-      deposit: 2500,
-      description: "Beautiful apartment in the heart of the city",
-      status: "OCCUPIED",
-      images: ["/modern-city-apartment.png"],
+      squareFeet: 1200,
+      rent: 2500.0,
+      deposit: 2500.0,
+      description: "Beautiful 2-bedroom apartment in the heart of the city",
       amenities: ["Parking", "Gym", "Pool", "Laundry"],
-      ownerId: landlord.id,
+      images: ["/modern-city-apartment.png"],
+      status: "OCCUPIED",
+      ownerId: landlordUser.id,
     },
   })
 
@@ -92,153 +57,161 @@ async function main() {
       type: "HOUSE",
       bedrooms: 3,
       bathrooms: 2,
-      squareFeet: 1200,
-      rent: 3200,
-      deposit: 3200,
-      description: "Spacious house with garden view",
-      status: "AVAILABLE",
-      images: ["/cozy-suburban-house.png"],
+      squareFeet: 1800,
+      rent: 3200.0,
+      deposit: 3200.0,
+      description: "Spacious 3-bedroom house with garden view",
       amenities: ["Garden", "Garage", "Air Conditioning"],
-      ownerId: landlord.id,
+      images: ["/cozy-suburban-house.png"],
+      status: "AVAILABLE",
+      ownerId: landlordUser.id,
     },
   })
 
-  // Create tenant profiles
-  const tenantProfile1 = await prisma.tenant.create({
+  // Create tenants
+  const tenant1 = await prisma.tenant.create({
     data: {
-      userId: tenant1.id,
-      emergencyContact: "Jane Johnson - +1234567894",
+      email: "tenant1@example.com",
+      name: "Alice Johnson",
+      phone: "+1-555-0123",
+      password: await bcrypt.hash("tenant123", 10),
+      dateOfBirth: new Date("1990-05-15"),
       occupation: "Software Engineer",
-      monthlyIncome: 8000,
-      moveInDate: new Date("2024-01-01"),
-      leaseEndDate: new Date("2024-12-31"),
+      income: 75000,
       status: "ACTIVE",
       propertyId: property1.id,
     },
   })
 
-  const tenantProfile2 = await prisma.tenant.create({
+  const tenant2 = await prisma.tenant.create({
     data: {
-      userId: tenant2.id,
-      emergencyContact: "Mary Smith - +1234567895",
-      occupation: "Teacher",
-      monthlyIncome: 5000,
+      email: "tenant2@example.com",
+      name: "Bob Smith",
+      phone: "+1-555-0124",
+      password: await bcrypt.hash("tenant123", 10),
+      dateOfBirth: new Date("1985-08-22"),
+      occupation: "Marketing Manager",
+      income: 65000,
       status: "ACTIVE",
     },
   })
 
   // Create leases
-  await prisma.lease.create({
+  const lease1 = await prisma.lease.create({
     data: {
       startDate: new Date("2024-01-01"),
       endDate: new Date("2024-12-31"),
-      monthlyRent: 2500,
-      deposit: 2500,
-      terms: "Standard lease agreement terms and conditions",
+      rentAmount: 2500.0,
+      depositAmount: 2500.0,
+      terms: "Standard 12-month lease agreement",
       status: "ACTIVE",
       propertyId: property1.id,
-      tenantId: tenantProfile1.id,
+      tenantId: tenant1.id,
     },
   })
 
   // Create payments
-  await prisma.payment.createMany({
-    data: [
-      {
-        amount: 2500,
-        dueDate: new Date("2024-01-01"),
-        paidDate: new Date("2024-01-01"),
-        status: "PAID",
-        type: "RENT",
-        method: "BANK_TRANSFER",
-        propertyId: property1.id,
-        tenantId: tenantProfile1.id,
-      },
-      {
-        amount: 2500,
-        dueDate: new Date("2024-02-01"),
-        paidDate: new Date("2024-02-01"),
-        status: "PAID",
-        type: "RENT",
-        method: "BANK_TRANSFER",
-        propertyId: property1.id,
-        tenantId: tenantProfile1.id,
-      },
-      {
-        amount: 2500,
-        dueDate: new Date("2024-03-01"),
-        status: "PENDING",
-        type: "RENT",
-        propertyId: property1.id,
-        tenantId: tenantProfile1.id,
-      },
-    ],
+  await prisma.payment.create({
+    data: {
+      amount: 2500.0,
+      dueDate: new Date("2024-01-01"),
+      paidDate: new Date("2024-01-01"),
+      method: "BANK_TRANSFER",
+      status: "PAID",
+      description: "January 2024 Rent",
+      transactionId: "TXN-001",
+      propertyId: property1.id,
+      tenantId: tenant1.id,
+      leaseId: lease1.id,
+    },
+  })
+
+  await prisma.payment.create({
+    data: {
+      amount: 2500.0,
+      dueDate: new Date("2024-02-01"),
+      method: "BANK_TRANSFER",
+      status: "PENDING",
+      description: "February 2024 Rent",
+      propertyId: property1.id,
+      tenantId: tenant1.id,
+      leaseId: lease1.id,
+    },
   })
 
   // Create maintenance requests
   await prisma.maintenanceRequest.create({
     data: {
       title: "Leaky Faucet",
-      description: "The kitchen faucet is leaking and needs repair",
+      description: "Kitchen faucet is dripping constantly",
       priority: "MEDIUM",
-      status: "PENDING",
-      category: "Plumbing",
+      status: "OPEN",
+      images: [],
       propertyId: property1.id,
-      tenantId: tenantProfile1.id,
+      tenantId: tenant1.id,
     },
   })
 
   // Create activities
-  await prisma.activity.createMany({
-    data: [
-      {
-        type: "PROPERTY_CREATED",
-        description: 'Property "Sunset Apartments" was created',
-        userId: landlord.id,
-        propertyId: property1.id,
-      },
-      {
-        type: "TENANT_ADDED",
-        description: "Tenant Alice Johnson was added to Sunset Apartments",
-        userId: admin.id,
-        propertyId: property1.id,
-      },
-      {
-        type: "PAYMENT_RECEIVED",
-        description: "Rent payment of $2,500 received from Alice Johnson",
-        userId: admin.id,
-        propertyId: property1.id,
-      },
-    ],
+  await prisma.activity.create({
+    data: {
+      type: "PROPERTY_CREATED",
+      description: 'Property "Sunset Apartments" was created',
+      userId: landlordUser.id,
+      propertyId: property1.id,
+    },
+  })
+
+  await prisma.activity.create({
+    data: {
+      type: "TENANT_CREATED",
+      description: 'Tenant "Alice Johnson" was added',
+      userId: landlordUser.id,
+      tenantId: tenant1.id,
+    },
+  })
+
+  await prisma.activity.create({
+    data: {
+      type: "PAYMENT_RECEIVED",
+      description: "Payment of $2,500 received from Alice Johnson",
+      userId: landlordUser.id,
+      tenantId: tenant1.id,
+      propertyId: property1.id,
+    },
   })
 
   // Create notifications
-  await prisma.notification.createMany({
-    data: [
-      {
-        title: "Rent Due Soon",
-        message: "Your rent payment is due in 3 days",
-        type: "PAYMENT_DUE",
-        userId: tenant1.id,
-      },
-      {
-        title: "Maintenance Request",
-        message: "New maintenance request for Sunset Apartments",
-        type: "MAINTENANCE_REQUEST",
-        userId: landlord.id,
-      },
-    ],
+  await prisma.notification.create({
+    data: {
+      title: "Payment Due",
+      message: "Rent payment for February 2024 is due",
+      type: "PAYMENT_DUE",
+      tenantId: tenant1.id,
+    },
+  })
+
+  await prisma.notification.create({
+    data: {
+      title: "Maintenance Request",
+      message: "New maintenance request for leaky faucet",
+      type: "MAINTENANCE_REQUEST",
+      userId: landlordUser.id,
+    },
   })
 
   console.log("✅ Database seeded successfully!")
+  console.log("👤 Admin: admin@rentflow.com / password123")
+  console.log("🏠 Landlord: landlord@rentflow.com / landlord123")
+  console.log("🏠 Tenant 1: tenant1@example.com / tenant123")
+  console.log("🏠 Tenant 2: tenant2@example.com / tenant123")
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect()
-  })
-  .catch(async (e) => {
-    console.error(e)
-    await prisma.$disconnect()
+  .catch((e) => {
+    console.error("❌ Error seeding database:", e)
     process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
   })

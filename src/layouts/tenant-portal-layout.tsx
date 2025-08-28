@@ -1,25 +1,29 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Outlet, useNavigate, useLocation } from "react-router-dom"
-import { TenantPortalNav } from "../components/tenant-portal/tenant-portal-nav"
+import { Outlet, useNavigate } from "react-router-dom"
 import { Loader2 } from "lucide-react"
+import { TenantPortalSidebar } from "../components/tenant-portal-sidebar"
+import { ThemeToggle } from "../components/theme-toggle"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
 
 export default function TenantPortalLayout() {
   const navigate = useNavigate()
-  const location = useLocation()
   const [isLoading, setIsLoading] = useState(true)
   const [tenant, setTenant] = useState<any>(null)
 
   useEffect(() => {
-    // Don't check auth for login page
-    if (location.pathname.includes("/login")) {
-      setIsLoading(false)
-      return
-    }
-
     // Check if tenant is logged in
-    const storedTenant = localStorage.getItem("tenantUser")
+    const storedTenant = localStorage.getItem("tenant")
     if (!storedTenant) {
       navigate("/tenant-portal/login")
       return
@@ -34,12 +38,7 @@ export default function TenantPortalLayout() {
     }
 
     setIsLoading(false)
-  }, [navigate, location])
-
-  // Don't apply layout to login page
-  if (location.pathname.includes("/login")) {
-    return <Outlet />
-  }
+  }, [navigate])
 
   if (isLoading) {
     return (
@@ -50,11 +49,31 @@ export default function TenantPortalLayout() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <TenantPortalNav tenant={tenant} />
-      <main className="flex-1 bg-muted/30 pt-16">
-        <Outlet />
-      </main>
-    </div>
+    <SidebarProvider>
+      <TenantPortalSidebar tenant={tenant} />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink href="/tenant-portal/dashboard">Tenant Portal</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Dashboard</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
+        </header>
+        <main className="flex-1 bg-muted/30">
+          <Outlet />
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

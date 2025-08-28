@@ -1,117 +1,166 @@
 export interface Property {
   id: string
   name: string
-  rooms: number
-  rentFee: number
-  status: "Open" | "Rented"
-  images: string[]
-  location?: string
+  address: string
+  city: string
+  state: string
+  zipCode: string
+  type: "apartment" | "house" | "condo" | "townhouse" | "studio"
+  bedrooms: number
+  bathrooms: number
+  squareFeet?: number
+  rent: number
+  deposit?: number
   description?: string
-  amenities?: string[]
-  createdAt: Date
-  updatedAt: Date
+  amenities: string[]
+  images: string[]
+  status: "available" | "occupied" | "maintenance" | "unavailable"
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Tenant {
   id: string
   name: string
-  contact: string
   email: string
-  nextOfKin: string
-  nextOfKinContact?: string
-  occupation: string
-  documents: Document[]
+  phone?: string
+  dateOfBirth?: string
+  occupation?: string
+  income?: number
   propertyId?: string
-  createdAt: Date
-  updatedAt: Date
+  leaseStart?: string
+  leaseEnd?: string
+  status: "active" | "inactive" | "pending" | "terminated"
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Payment {
+  id: string
+  amount: number
+  dueDate: string
+  paidDate?: string
+  method: "cash" | "bank_transfer" | "credit_card" | "debit_card" | "mpesa" | "check"
+  status: "pending" | "paid" | "overdue" | "partial" | "failed"
+  description?: string
+  transactionId?: string
+  propertyId: string
+  tenantId: string
+  leaseId?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Lease {
+  id: string
+  propertyId: string
+  tenantId: string
+  startDate: string
+  endDate: string
+  rentAmount: number
+  depositAmount?: number
+  terms?: string
+  status: "active" | "expired" | "terminated" | "pending"
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MaintenanceRequest {
+  id: string
+  title: string
+  description: string
+  priority: "low" | "medium" | "high" | "urgent"
+  status: "open" | "in_progress" | "completed" | "cancelled"
+  images: string[]
+  cost?: number
+  completedAt?: string
+  propertyId: string
+  tenantId: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Document {
   id: string
   name: string
+  type:
+    | "lease_agreement"
+    | "id_copy"
+    | "income_proof"
+    | "receipt"
+    | "maintenance_report"
+    | "inspection_report"
+    | "other"
   url: string
-  type: "ID" | "Lease" | "Other"
-  uploadedAt: Date
-}
-
-export interface Payment {
-  id: string
-  tenantId: string
-  propertyId: string
-  amount: number
-  date: Date
-  mode: "M-Pesa" | "Cash" | "Bank"
-  reference?: string
-  createdAt: Date
-  status: "Pending" | "Completed" | "Failed"
-  period?: string
-}
-
-export interface DashboardSummary {
-  activeTenantsCount: number
-  totalCollected: number
-  openPropertiesCount: number
-  recentActivity: Activity[]
-  upcomingPayments: UpcomingPayment[]
-  occupancyRate: number
+  size?: number
+  mimeType?: string
+  tenantId?: string
+  leaseId?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Activity {
   id: string
-  type: "payment" | "property_status" | "tenant_added"
-  message: string
-  date: Date
+  type:
+    | "user_login"
+    | "user_logout"
+    | "property_created"
+    | "property_updated"
+    | "property_deleted"
+    | "tenant_created"
+    | "tenant_updated"
+    | "tenant_deleted"
+    | "lease_created"
+    | "lease_updated"
+    | "lease_terminated"
+    | "payment_created"
+    | "payment_updated"
+    | "payment_received"
+    | "maintenance_created"
+    | "maintenance_updated"
+    | "maintenance_completed"
+    | "document_uploaded"
+    | "document_deleted"
+  description: string
+  userId?: string
+  tenantId?: string
+  propertyId?: string
+  leaseId?: string
+  paymentId?: string
+  maintenanceId?: string
+  metadata?: Record<string, any>
+  timestamp: string
 }
 
-export interface UpcomingPayment {
+export interface Notification {
   id: string
-  tenantId: string
-  propertyId: string
-  amount: number
-  dueDate: Date
-  period?: string
+  title: string
+  message: string
+  type:
+    | "payment_due"
+    | "payment_received"
+    | "payment_overdue"
+    | "lease_expiring"
+    | "maintenance_request"
+    | "maintenance_completed"
+    | "system_alert"
+    | "general"
+  read: boolean
+  userId?: string
+  tenantId?: string
+  createdAt: string
 }
 
 export interface User {
   id: string
-  name: string
   email: string
-  password: string // In a real app, this would be hashed
-  role: "admin" | "manager" | "viewer"
+  name?: string
+  role: "admin" | "landlord" | "property_manager"
+  createdAt: string
+  updatedAt: string
 }
 
-export interface ChartData {
-  month: string
-  amount: number
-}
-
-// Re-export Prisma types for use in components
-export type {
-  User,
-  Tenant,
-  Property,
-  Payment,
-  Lease,
-  MaintenanceRequest,
-  Document,
-  Activity,
-  Notification,
-  UserRole,
-  TenantStatus,
-  PropertyType,
-  PropertyStatus,
-  PaymentStatus,
-  PaymentType,
-  PaymentMethod,
-  LeaseStatus,
-  Priority,
-  MaintenanceStatus,
-  DocumentType,
-  ActivityType,
-  NotificationType,
-} from "@prisma/client"
-
-// Additional types for the application
 export interface DashboardStats {
   totalProperties: number
   occupiedProperties: number
@@ -119,37 +168,9 @@ export interface DashboardStats {
   activeTenants: number
   totalPayments: number
   paidPayments: number
+  pendingPayments: number
   overduePayments: number
-  pendingMaintenance: number
+  maintenanceRequests: number
   occupancyRate: number
   collectionRate: number
-}
-
-export interface PropertyWithDetails extends Property {
-  owner: User
-  tenants: (Tenant & { user: User })[]
-  _count: {
-    tenants: number
-    payments: number
-  }
-}
-
-export interface TenantWithDetails extends Tenant {
-  user: User
-  property?: Property
-  payments: Payment[]
-  _count: {
-    payments: number
-    maintenanceRequests: number
-  }
-}
-
-export interface PaymentWithDetails extends Payment {
-  property: Property
-  tenant: Tenant & { user: User }
-}
-
-export interface ActivityWithDetails extends Activity {
-  user: User
-  property?: Property
 }

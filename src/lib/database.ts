@@ -1,13 +1,26 @@
 import { prisma } from "./prisma"
+import type {
+  Property,
+  Tenant,
+  Payment,
+  Lease,
+  MaintenanceRequest,
+  Activity,
+  Notification,
+  PropertyStatus,
+  PaymentStatus,
+  MaintenanceStatus,
+} from "@prisma/client"
 
-// Properties
-export async function getProperties() {
+// Property operations
+export async function getProperties(ownerId?: string) {
   return prisma.property.findMany({
+    where: ownerId ? { ownerId } : undefined,
     include: {
-      owner: true,
-      tenants: {
+      tenants: true,
+      leases: {
         include: {
-          user: true,
+          tenant: true,
         },
       },
       _count: {
@@ -17,6 +30,7 @@ export async function getProperties() {
         },
       },
     },
+    orderBy: { createdAt: "desc" },
   })
 }
 
@@ -25,57 +39,66 @@ export async function getPropertyById(id: string) {
     where: { id },
     include: {
       owner: true,
-      tenants: {
+      tenants: true,
+      leases: {
         include: {
-          user: true,
-          payments: true,
+          tenant: true,
         },
       },
       payments: {
         include: {
-          tenant: {
-            include: {
-              user: true,
-            },
-          },
+          tenant: true,
         },
+        orderBy: { createdAt: "desc" },
       },
-      maintenanceRequests: {
+      maintenance: {
         include: {
-          tenant: {
-            include: {
-              user: true,
-            },
-          },
+          tenant: true,
         },
-      },
-      leases: {
-        include: {
-          tenant: {
-            include: {
-              user: true,
-            },
-          },
-        },
+        orderBy: { createdAt: "desc" },
       },
     },
   })
 }
 
-// Tenants
+export async function createProperty(data: Omit<Property, "id" | "createdAt" | "updatedAt">) {
+  return prisma.property.create({
+    data,
+  })
+}
+
+export async function updateProperty(id: string, data: Partial<Property>) {
+  return prisma.property.update({
+    where: { id },
+    data,
+  })
+}
+
+export async function updatePropertyStatus(id: string, status: PropertyStatus) {
+  return prisma.property.update({
+    where: { id },
+    data: { status },
+  })
+}
+
+// Tenant operations
 export async function getTenants() {
   return prisma.tenant.findMany({
     include: {
-      user: true,
       property: true,
-      payments: true,
+      leases: {
+        include: {
+          property: true,
+        },
+      },
       _count: {
         select: {
           payments: true,
-          maintenanceRequests: true,
+          maintenance: true,
         },
       },
     },
+    orderBy: { createdAt: "desc" },
   })
 }
 
@@ -83,76 +106,169 @@ export async function getTenantById(id: string) {
   return prisma.tenant.findUnique({
     where: { id },
     include: {
-      user: true,
       property: true,
-      payments: {
-        orderBy: {
-          dueDate: "desc",
-        },
-      },
-      maintenanceRequests: {
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
       leases: {
-        orderBy: {
-          startDate: "desc",
+        include: {
+          property: true,
         },
+      },
+      payments: {
+        include: {
+          property: true,
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      documents: true,
+      maintenance: {
+        include: {
+          property: true,
+        },
+        orderBy: { createdAt: "desc" },
       },
     },
   })
 }
 
-// Payments
+export async function createTenant(data: Omit<Tenant, "id" | "createdAt" | "updatedAt">) {
+  return prisma.tenant.create({
+    data,
+  })
+}
+
+export async function updateTenant(id: string, data: Partial<Tenant>) {
+  return prisma.tenant.update({
+    where: { id },
+    data,
+  })
+}
+
+// Payment operations
 export async function getPayments() {
   return prisma.payment.findMany({
     include: {
       property: true,
-      tenant: {
-        include: {
-          user: true,
-        },
-      },
+      tenant: true,
+      lease: true,
     },
-    orderBy: {
-      dueDate: "desc",
-    },
+    orderBy: { createdAt: "desc" },
   })
 }
 
-export async function getOverduePayments() {
-  return prisma.payment.findMany({
-    where: {
-      status: "OVERDUE",
-    },
+export async function getPaymentById(id: string) {
+  return prisma.payment.findUnique({
+    where: { id },
     include: {
       property: true,
-      tenant: {
-        include: {
-          user: true,
-        },
-      },
+      tenant: true,
+      lease: true,
     },
   })
 }
 
-// Activities
-export async function getRecentActivities(limit = 10) {
-  return prisma.activity.findMany({
-    take: limit,
-    orderBy: {
-      createdAt: "desc",
+export async function createPayment(data: Omit<Payment, "id" | "createdAt" | "updatedAt">) {
+  return prisma.payment.create({
+    data,
+  })
+}
+
+export async function updatePaymentStatus(id: string, status: PaymentStatus, paidDate?: Date) {
+  return prisma.payment.update({
+    where: { id },
+    data: {
+      status,
+      paidDate,
     },
+  })
+}
+
+// Lease operations
+export async function getLeases() {
+  return prisma.lease.findMany({
+    include: {
+      property: true,
+      tenant: true,
+    },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+export async function createLease(data: Omit<Lease, "id" | "createdAt" | "updatedAt">) {
+  return prisma.lease.create({
+    data,
+  })
+}
+
+// Maintenance operations
+export async function getMaintenanceRequests() {
+  return prisma.maintenanceRequest.findMany({
+    include: {
+      property: true,
+      tenant: true,
+    },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+export async function createMaintenanceRequest(data: Omit<MaintenanceRequest, "id" | "createdAt" | "updatedAt">) {
+  return prisma.maintenanceRequest.create({
+    data,
+  })
+}
+
+export async function updateMaintenanceStatus(id: string, status: MaintenanceStatus) {
+  return prisma.maintenanceRequest.update({
+    where: { id },
+    data: {
+      status,
+      completedAt: status === "COMPLETED" ? new Date() : null,
+    },
+  })
+}
+
+// Activity operations
+export async function getActivities(limit = 50) {
+  return prisma.activity.findMany({
     include: {
       user: true,
+      tenant: true,
       property: true,
     },
+    orderBy: { createdAt: "desc" },
+    take: limit,
   })
 }
 
-// Dashboard stats
-export async function getDashboardStats() {
+export async function createActivity(data: Omit<Activity, "id" | "createdAt">) {
+  return prisma.activity.create({
+    data,
+  })
+}
+
+// Notification operations
+export async function getNotifications(userId?: string, tenantId?: string) {
+  return prisma.notification.findMany({
+    where: {
+      OR: [userId ? { userId } : {}, tenantId ? { tenantId } : {}],
+    },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+export async function createNotification(data: Omit<Notification, "id" | "createdAt">) {
+  return prisma.notification.create({
+    data,
+  })
+}
+
+export async function markNotificationAsRead(id: string) {
+  return prisma.notification.update({
+    where: { id },
+    data: { read: true },
+  })
+}
+
+// Dashboard statistics
+export async function getDashboardStats(ownerId?: string) {
   const [
     totalProperties,
     occupiedProperties,
@@ -160,17 +276,36 @@ export async function getDashboardStats() {
     activeTenants,
     totalPayments,
     paidPayments,
+    pendingPayments,
     overduePayments,
-    pendingMaintenance,
+    maintenanceRequests,
   ] = await Promise.all([
-    prisma.property.count(),
-    prisma.property.count({ where: { status: "OCCUPIED" } }),
+    prisma.property.count({
+      where: ownerId ? { ownerId } : undefined,
+    }),
+    prisma.property.count({
+      where: {
+        status: "OCCUPIED",
+        ...(ownerId ? { ownerId } : {}),
+      },
+    }),
     prisma.tenant.count(),
-    prisma.tenant.count({ where: { status: "ACTIVE" } }),
+    prisma.tenant.count({
+      where: { status: "ACTIVE" },
+    }),
     prisma.payment.count(),
-    prisma.payment.count({ where: { status: "PAID" } }),
-    prisma.payment.count({ where: { status: "OVERDUE" } }),
-    prisma.maintenanceRequest.count({ where: { status: "PENDING" } }),
+    prisma.payment.count({
+      where: { status: "PAID" },
+    }),
+    prisma.payment.count({
+      where: { status: "PENDING" },
+    }),
+    prisma.payment.count({
+      where: { status: "OVERDUE" },
+    }),
+    prisma.maintenanceRequest.count({
+      where: { status: { not: "COMPLETED" } },
+    }),
   ])
 
   const occupancyRate = totalProperties > 0 ? (occupiedProperties / totalProperties) * 100 : 0
@@ -183,36 +318,10 @@ export async function getDashboardStats() {
     activeTenants,
     totalPayments,
     paidPayments,
+    pendingPayments,
     overduePayments,
-    pendingMaintenance,
+    maintenanceRequests,
     occupancyRate,
     collectionRate,
   }
-}
-
-// Maintenance requests
-export async function getMaintenanceRequests() {
-  return prisma.maintenanceRequest.findMany({
-    include: {
-      property: true,
-      tenant: {
-        include: {
-          user: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  })
-}
-
-// Notifications
-export async function getNotifications(userId: string) {
-  return prisma.notification.findMany({
-    where: { userId },
-    orderBy: {
-      createdAt: "desc",
-    },
-  })
 }
