@@ -1,0 +1,329 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication and user management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(TENANT)
+  avatar    String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ownedProperties Property[] @relation("PropertyOwner")
+  tenantProfile   Tenant?
+  activities      Activity[]
+  notifications   Notification[]
+  documents       Document[]
+
+  @@map("users")
+}
+
+// Tenant profile for users with TENANT role
+model Tenant {
+  id              String        @id @default(cuid())
+  userId          String        @unique
+  emergencyContact String?
+  occupation      String?
+  monthlyIncome   Float?
+  moveInDate      DateTime?
+  leaseEndDate    DateTime?
+  status          TenantStatus  @default(ACTIVE)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property        Property?     @relation(fields: [propertyId], references: [id])
+  propertyId      String?
+  payments        Payment[]
+  maintenanceRequests MaintenanceRequest[]
+  leases          Lease[]
+
+  @@map("tenants")
+}
+
+// Property model
+model Property {
+  id          String         @id @default(cuid())
+  name        String
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  type        PropertyType
+  bedrooms    Int
+  bathrooms   Float
+  squareFeet  Int?
+  rent        Float
+  deposit     Float?
+  description String?
+  status      PropertyStatus @default(AVAILABLE)
+  images      String[]
+  amenities   String[]
+  ownerId     String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relations
+  owner               User                 @relation("PropertyOwner", fields: [ownerId], references: [id])
+  tenants             Tenant[]
+  payments            Payment[]
+  maintenanceRequests MaintenanceRequest[]
+  leases              Lease[]
+  documents           Document[]
+  activities          Activity[]
+
+  @@map("properties")
+}
+
+// Payment model
+model Payment {
+  id            String        @id @default(cuid())
+  amount        Float
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        PaymentStatus @default(PENDING)
+  type          PaymentType   @default(RENT)
+  description   String?
+  method        PaymentMethod?
+  transactionId String?
+  propertyId    String
+  tenantId      String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@map("payments")
+}
+
+// Lease model
+model Lease {
+  id           String     @id @default(cuid())
+  startDate    DateTime
+  endDate      DateTime
+  monthlyRent  Float
+  deposit      Float
+  terms        String?
+  status       LeaseStatus @default(ACTIVE)
+  propertyId   String
+  tenantId     String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@map("leases")
+}
+
+// Maintenance Request model
+model MaintenanceRequest {
+  id          String            @id @default(cuid())
+  title       String
+  description String
+  priority    Priority          @default(MEDIUM)
+  status      MaintenanceStatus @default(PENDING)
+  category    String?
+  cost        Float?
+  scheduledDate DateTime?
+  completedDate DateTime?
+  propertyId  String
+  tenantId    String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  documents Document[]
+
+  @@map("maintenance_requests")
+}
+
+// Document model for file storage
+model Document {
+  id          String     @id @default(cuid())
+  name        String
+  type        DocumentType
+  url         String
+  size        Int?
+  mimeType    String?
+  uploadedBy  String
+  propertyId  String?
+  maintenanceRequestId String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  uploader    User       @relation(fields: [uploadedBy], references: [id])
+  property    Property?  @relation(fields: [propertyId], references: [id])
+  maintenanceRequest MaintenanceRequest? @relation(fields: [maintenanceRequestId], references: [id])
+
+  @@map("documents")
+}
+
+// Activity log model
+model Activity {
+  id          String       @id @default(cuid())
+  type        ActivityType
+  description String
+  metadata    Json?
+  userId      String
+  propertyId  String?
+  createdAt   DateTime     @default(now())
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id])
+  property Property? @relation(fields: [propertyId], references: [id])
+
+  @@map("activities")
+}
+
+// Notification model
+model Notification {
+  id        String           @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType
+  read      Boolean          @default(false)
+  userId    String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  LANDLORD
+  TENANT
+}
+
+enum TenantStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  TERMINATED
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  CONDO
+  TOWNHOUSE
+  STUDIO
+  COMMERCIAL
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+  UNAVAILABLE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  PARTIAL
+  CANCELLED
+}
+
+enum PaymentType {
+  RENT
+  DEPOSIT
+  UTILITIES
+  MAINTENANCE
+  LATE_FEE
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  CHECK
+  BANK_TRANSFER
+  CREDIT_CARD
+  MPESA
+  PAYPAL
+}
+
+enum LeaseStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+  PENDING
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum MaintenanceStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum DocumentType {
+  LEASE
+  ID_COPY
+  INCOME_PROOF
+  REFERENCE
+  MAINTENANCE
+  INVOICE
+  RECEIPT
+  OTHER
+}
+
+enum ActivityType {
+  USER_LOGIN
+  USER_LOGOUT
+  PROPERTY_CREATED
+  PROPERTY_UPDATED
+  TENANT_ADDED
+  TENANT_REMOVED
+  PAYMENT_RECEIVED
+  PAYMENT_OVERDUE
+  MAINTENANCE_REQUESTED
+  MAINTENANCE_COMPLETED
+  LEASE_SIGNED
+  LEASE_EXPIRED
+  DOCUMENT_UPLOADED
+}
+
+enum NotificationType {
+  PAYMENT_DUE
+  PAYMENT_OVERDUE
+  MAINTENANCE_REQUEST
+  LEASE_EXPIRING
+  TENANT_APPLICATION
+  SYSTEM_UPDATE
+  GENERAL
+}
