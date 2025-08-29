@@ -1,29 +1,27 @@
+import { addDays } from "date-fns"
+
+// Types
 export interface Property {
   id: string
   name: string
   location: string
   rooms: number
   rentFee: number
-  status: "Available" | "Occupied" | "Maintenance"
-  images: string[]
+  status: "Open" | "Rented"
   description?: string
-  amenities?: string[]
+  images: string[]
+  amenities: string[]
   createdAt: Date
-  updatedAt: Date
 }
 
 export interface Tenant {
   id: string
   name: string
-  email: string
   contact: string
-  propertyId: string
-  rentAmount: number
-  leaseStart: Date
-  leaseEnd: Date
-  status: "Active" | "Inactive"
+  email: string
+  propertyId?: string
   createdAt: Date
-  updatedAt: Date
+  status: "Active" | "Inactive"
 }
 
 export interface Payment {
@@ -32,62 +30,78 @@ export interface Payment {
   propertyId: string
   amount: number
   date: Date
-  period: string
-  mode: "Cash" | "Bank Transfer" | "Mobile Money" | "Check"
-  status: "Paid" | "Pending" | "Overdue"
-  reference?: string
-  createdAt: Date
-  updatedAt: Date
+  mode: string
+  period?: string
+  status: "Completed" | "Pending"
 }
 
 export interface User {
   id: string
   name: string
   email: string
-  password: string
   role: "admin" | "landlord"
 }
 
-// Demo data
+export interface Activity {
+  id: string
+  type: "payment" | "property_status" | "tenant_added"
+  message: string
+  date: Date
+}
+
+export interface UpcomingPayment {
+  id: string
+  tenantId: string
+  propertyId: string
+  amount: number
+  dueDate: Date
+  period: string
+}
+
+export interface DashboardSummary {
+  activeTenantsCount: number
+  totalCollected: number
+  openPropertiesCount: number
+  occupancyRate: number
+}
+
+// Mock Data
 export const properties: Property[] = [
   {
     id: "1",
-    name: "Sunset Apartments Unit 2B",
+    name: "Sunset Apartments - Unit 2B",
     location: "Masaki, Dar es Salaam",
-    rooms: 3,
+    rooms: 2,
     rentFee: 800000,
-    status: "Occupied",
-    images: ["/cozy-suburban-house.png"],
-    description: "A beautiful 3-bedroom apartment with modern amenities and great city views.",
-    amenities: ["WiFi", "Parking", "Security", "Water", "Electricity"],
-    createdAt: new Date("2023-01-15"),
-    updatedAt: new Date("2024-01-15"),
+    status: "Rented",
+    description: "A beautiful 2-bedroom apartment with modern amenities and stunning city views.",
+    images: ["/cozy-suburban-house.png", "/modern-city-apartment.png"],
+    amenities: ["Parking", "Security", "Water Tank", "Backup Generator", "WiFi", "AC"],
+    createdAt: new Date("2024-01-01"),
   },
   {
     id: "2",
-    name: "Garden View Studio",
+    name: "Garden View House",
     location: "Mikocheni, Dar es Salaam",
-    rooms: 1,
-    rentFee: 400000,
-    status: "Available",
-    images: ["/modern-city-apartment.png"],
-    description: "Cozy studio apartment perfect for young professionals.",
-    amenities: ["WiFi", "Security", "Water"],
-    createdAt: new Date("2023-02-20"),
-    updatedAt: new Date("2024-02-20"),
+    rooms: 3,
+    rentFee: 1200000,
+    status: "Open",
+    description: "Spacious 3-bedroom house with a beautiful garden and parking space.",
+    images: ["/modern-city-apartment.png", "/cozy-suburban-house.png"],
+    amenities: ["Parking", "Security", "Water Tank", "Garden"],
+    createdAt: new Date("2024-01-15"),
   },
   {
     id: "3",
-    name: "Family House Mbezi",
-    location: "Mbezi Beach, Dar es Salaam",
-    rooms: 4,
-    rentFee: 1200000,
-    status: "Occupied",
-    images: ["/placeholder.jpg"],
-    description: "Spacious family house with garden and parking space.",
-    amenities: ["WiFi", "Parking", "Security", "Water", "Electricity", "Garden"],
-    createdAt: new Date("2023-03-10"),
-    updatedAt: new Date("2024-03-10"),
+    name: "City Center Studio",
+    location: "City Center, Dar es Salaam",
+    rooms: 1,
+    rentFee: 500000,
+    status: "Rented",
+    description: "Modern studio apartment in the heart of the city.",
+    images: ["/cozy-suburban-house.png"],
+    amenities: ["Security", "WiFi", "AC"],
+    createdAt: new Date("2024-02-01"),
   },
 ]
 
@@ -95,28 +109,28 @@ export const tenants: Tenant[] = [
   {
     id: "1",
     name: "John Doe",
-    email: "john.doe@email.com",
     contact: "+255 123 456 789",
+    email: "john.doe@example.com",
     propertyId: "1",
-    rentAmount: 800000,
-    leaseStart: new Date("2024-01-01"),
-    leaseEnd: new Date("2024-12-31"),
+    createdAt: new Date("2024-01-01"),
     status: "Active",
-    createdAt: new Date("2023-12-15"),
-    updatedAt: new Date("2024-01-01"),
   },
   {
     id: "2",
     name: "Jane Smith",
-    email: "jane.smith@email.com",
     contact: "+255 987 654 321",
+    email: "jane.smith@example.com",
     propertyId: "3",
-    rentAmount: 1200000,
-    leaseStart: new Date("2024-02-01"),
-    leaseEnd: new Date("2025-01-31"),
+    createdAt: new Date("2024-02-01"),
     status: "Active",
-    createdAt: new Date("2024-01-15"),
-    updatedAt: new Date("2024-02-01"),
+  },
+  {
+    id: "3",
+    name: "Mike Johnson",
+    contact: "+255 555 123 456",
+    email: "mike.johnson@example.com",
+    createdAt: new Date("2024-02-15"),
+    status: "Inactive",
   },
 ]
 
@@ -126,26 +140,40 @@ export const payments: Payment[] = [
     tenantId: "1",
     propertyId: "1",
     amount: 800000,
-    date: new Date("2024-01-01"),
-    period: "January 2024",
+    date: new Date("2024-01-15"),
     mode: "Bank Transfer",
-    status: "Paid",
-    reference: "TXN123456",
-    createdAt: new Date("2024-01-01"),
-    updatedAt: new Date("2024-01-01"),
+    period: "January 2024",
+    status: "Completed",
   },
   {
     id: "2",
+    tenantId: "1",
+    propertyId: "1",
+    amount: 800000,
+    date: new Date("2024-02-15"),
+    mode: "M-Pesa",
+    period: "February 2024",
+    status: "Completed",
+  },
+  {
+    id: "3",
     tenantId: "2",
     propertyId: "3",
-    amount: 1200000,
-    date: new Date("2024-02-01"),
+    amount: 500000,
+    date: new Date("2024-02-15"),
+    mode: "Cash",
     period: "February 2024",
-    mode: "Mobile Money",
-    status: "Paid",
-    reference: "TXN123457",
-    createdAt: new Date("2024-02-01"),
-    updatedAt: new Date("2024-02-01"),
+    status: "Completed",
+  },
+  {
+    id: "4",
+    tenantId: "1",
+    propertyId: "1",
+    amount: 800000,
+    date: new Date("2024-03-15"),
+    mode: "Bank Transfer",
+    period: "March 2024",
+    status: "Pending",
   },
 ]
 
@@ -154,14 +182,58 @@ export const users: User[] = [
     id: "1",
     name: "Admin User",
     email: "admin@rentflow.com",
-    password: "password123",
     role: "admin",
   },
 ]
 
-// Helper functions
+export const activities: Activity[] = [
+  {
+    id: "1",
+    type: "payment",
+    message: "John Doe paid rent for January 2024",
+    date: new Date("2024-01-15"),
+  },
+  {
+    id: "2",
+    type: "tenant_added",
+    message: "New tenant Jane Smith added to City Center Studio",
+    date: new Date("2024-02-01"),
+  },
+  {
+    id: "3",
+    type: "property_status",
+    message: "Garden View House status changed to Open",
+    date: new Date("2024-02-10"),
+  },
+]
+
+export const upcomingPayments: UpcomingPayment[] = [
+  {
+    id: "1",
+    tenantId: "1",
+    propertyId: "1",
+    amount: 800000,
+    dueDate: addDays(new Date(), 5),
+    period: "April 2024",
+  },
+  {
+    id: "2",
+    tenantId: "2",
+    propertyId: "3",
+    amount: 500000,
+    dueDate: addDays(new Date(), 10),
+    period: "April 2024",
+  },
+]
+
+// Helper Functions
 export const formatCurrency = (amount: number): string => {
-  return `TZS ${amount.toLocaleString()}`
+  return new Intl.NumberFormat("en-TZ", {
+    style: "currency",
+    currency: "TZS",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
 }
 
 export const getPropertyById = (id: string): Property | undefined => {
@@ -172,18 +244,6 @@ export const getTenantById = (id: string): Tenant | undefined => {
   return tenants.find((tenant) => tenant.id === id)
 }
 
-export const getPaymentById = (id: string): Payment | undefined => {
-  return payments.find((payment) => payment.id === id)
-}
-
-export const getUserById = (id: string): User | undefined => {
-  return users.find((user) => user.id === id)
-}
-
-export const getTenantsByPropertyId = (propertyId: string): Tenant[] => {
-  return tenants.filter((tenant) => tenant.propertyId === propertyId)
-}
-
 export const getPaymentsByTenantId = (tenantId: string): Payment[] => {
   return payments.filter((payment) => payment.tenantId === tenantId)
 }
@@ -192,10 +252,60 @@ export const getPaymentsByPropertyId = (propertyId: string): Payment[] => {
   return payments.filter((payment) => payment.propertyId === propertyId)
 }
 
-// Export all data as demoData for compatibility
+export const getUpcomingPaymentByTenantId = (tenantId: string): UpcomingPayment | undefined => {
+  return upcomingPayments.find((payment) => payment.tenantId === tenantId)
+}
+
+export const getDashboardSummary = (): DashboardSummary => {
+  const activeTenantsCount = tenants.filter((tenant) => tenant.status === "Active").length
+  const totalCollected = payments
+    .filter((payment) => payment.status === "Completed")
+    .reduce((sum, payment) => sum + payment.amount, 0)
+  const openPropertiesCount = properties.filter((property) => property.status === "Open").length
+  const totalProperties = properties.length
+  const occupancyRate =
+    totalProperties > 0 ? Math.round(((totalProperties - openPropertiesCount) / totalProperties) * 100) : 0
+
+  return {
+    activeTenantsCount,
+    totalCollected,
+    openPropertiesCount,
+    occupancyRate,
+  }
+}
+
+export const getRentCollectionData = () => {
+  return [
+    { month: "Jan", amount: 2400000 },
+    { month: "Feb", amount: 1300000 },
+    { month: "Mar", amount: 800000 },
+    { month: "Apr", amount: 1600000 },
+    { month: "May", amount: 2100000 },
+    { month: "Jun", amount: 1800000 },
+  ]
+}
+
+export const getPropertyOccupancyData = () => {
+  const occupied = properties.filter((p) => p.status === "Rented").length
+  const vacant = properties.filter((p) => p.status === "Open").length
+  return { occupied, vacant }
+}
+
+// Export all data as demoData object
 export const demoData = {
   properties,
   tenants,
   payments,
   users,
+  activities,
+  upcomingPayments,
+  formatCurrency,
+  getPropertyById,
+  getTenantById,
+  getPaymentsByTenantId,
+  getPaymentsByPropertyId,
+  getUpcomingPaymentByTenantId,
+  getDashboardSummary,
+  getRentCollectionData,
+  getPropertyOccupancyData,
 }
