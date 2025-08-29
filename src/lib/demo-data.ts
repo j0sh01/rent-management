@@ -1,4 +1,4 @@
-import type { Activity, Payment, Property, Tenant } from "./types"
+import type { Activity, Payment, Property, Tenant, DashboardSummary, UpcomingPayment } from "./types"
 import { addDays, subDays } from "date-fns"
 
 // Helper to generate random dates within the last 3 months
@@ -17,6 +17,28 @@ const randomUpcomingDate = () => {
 
 // Properties
 export const properties: Property[] = [
+  {
+    id: "1",
+    name: "Sunset Apartments",
+    location: "Dar es Salaam, Tanzania",
+    rooms: 3,
+    rentFee: 800000,
+    status: "Rented",
+    images: ["/cozy-suburban-house.png"],
+    amenities: ["Parking", "Security", "Water Tank"],
+    description: "Beautiful 3-bedroom apartment in the heart of Dar es Salaam",
+  },
+  {
+    id: "2",
+    name: "Ocean View Villa",
+    location: "Zanzibar, Tanzania",
+    rooms: 4,
+    rentFee: 1200000,
+    status: "Open",
+    images: ["/modern-city-apartment.png"],
+    amenities: ["Swimming Pool", "Security", "Parking", "Gym"],
+    description: "Luxury villa with stunning ocean views",
+  },
   {
     id: "prop-001",
     name: "Serengeti Apartments - Block A",
@@ -99,6 +121,17 @@ export const properties: Property[] = [
 
 // Tenants
 export const tenants: Tenant[] = [
+  {
+    id: "1",
+    name: "John Mwangi",
+    email: "john@example.com",
+    contact: "+255 123 456 789",
+    propertyId: "1",
+    leaseStart: new Date("2024-01-01"),
+    leaseEnd: new Date("2024-12-31"),
+    rentAmount: 800000,
+    status: "Active",
+  },
   {
     id: "tenant-001",
     name: "Amina Hassan",
@@ -215,6 +248,16 @@ export const tenants: Tenant[] = [
 
 // Payments
 export const payments: Payment[] = [
+  {
+    id: "1",
+    tenantId: "1",
+    propertyId: "1",
+    amount: 800000,
+    date: new Date("2024-01-01"),
+    mode: "Bank Transfer",
+    period: "January 2024",
+    status: "Paid",
+  },
   // Amina Hassan payments
   {
     id: "payment-001",
@@ -321,7 +364,15 @@ export const payments: Payment[] = [
 ]
 
 // Upcoming payments (due dates)
-export const upcomingPayments = [
+export const upcomingPayments: UpcomingPayment[] = [
+  {
+    id: "1",
+    tenantId: "1",
+    propertyId: "1",
+    amount: 800000,
+    dueDate: new Date("2024-02-01"),
+    period: "February 2024",
+  },
   {
     id: "upcoming-001",
     tenantId: "tenant-001",
@@ -358,6 +409,12 @@ export const upcomingPayments = [
 
 // Recent activities
 export const activities: Activity[] = [
+  {
+    id: "1",
+    type: "payment",
+    message: "Payment received from John Mwangi",
+    date: new Date("2024-01-01"),
+  },
   {
     id: "activity-001",
     type: "payment",
@@ -409,7 +466,7 @@ export const occupancyData = {
 // Users for authentication
 export const users = [
   {
-    id: "user-001",
+    id: "1",
     name: "Admin User",
     email: "admin@rentflow.com",
     password: "password123", // In a real app, this would be hashed
@@ -424,32 +481,51 @@ export const users = [
   },
 ]
 
+// Dashboard summary
+export const dashboardSummary: DashboardSummary = {
+  activeTenantsCount: 1,
+  totalCollected: 800000,
+  openPropertiesCount: 1,
+  occupancyRate: 50,
+}
+
 // Get tenant by ID
-export const getTenantById = (id: string) => {
+export const getTenantById = (id: string): Tenant | undefined => {
   return tenants.find((tenant) => tenant.id === id)
 }
 
 // Get property by ID
-export const getPropertyById = (id: string) => {
+export const getPropertyById = (id: string): Property | undefined => {
   return properties.find((property) => property.id === id)
 }
 
 // Get payments by tenant ID
-export const getPaymentsByTenantId = (tenantId: string) => {
+export const getPaymentsByTenantId = (tenantId: string): Payment[] => {
   return payments.filter((payment) => payment.tenantId === tenantId)
 }
 
 // Get upcoming payment by tenant ID
-export const getUpcomingPaymentByTenantId = (tenantId: string) => {
+export const getUpcomingPaymentByTenantId = (tenantId: string): UpcomingPayment | undefined => {
   return upcomingPayments.find((payment) => payment.tenantId === tenantId)
 }
 
 // Format currency in TZS
-export const formatCurrency = (amount: number) => {
+export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat("en-TZ", {
     style: "currency",
     currency: "TZS",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount)
+}
+
+// Export as demoData for compatibility
+export const demoData = {
+  properties,
+  tenants,
+  payments,
+  activities,
+  users,
+  upcomingPayments,
+  dashboardSummary,
 }
