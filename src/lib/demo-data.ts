@@ -226,6 +226,21 @@ export const upcomingPayments: UpcomingPayment[] = [
   },
 ]
 
+// Chart data
+export const monthlyCollections = [
+  { month: "Jan", amount: 2400000 },
+  { month: "Feb", amount: 1300000 },
+  { month: "Mar", amount: 800000 },
+  { month: "Apr", amount: 1600000 },
+  { month: "May", amount: 2100000 },
+  { month: "Jun", amount: 1800000 },
+]
+
+export const occupancyData = {
+  occupied: 2,
+  vacant: 1,
+}
+
 // Helper Functions
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat("en-TZ", {
@@ -275,20 +290,11 @@ export const getDashboardSummary = (): DashboardSummary => {
 }
 
 export const getRentCollectionData = () => {
-  return [
-    { month: "Jan", amount: 2400000 },
-    { month: "Feb", amount: 1300000 },
-    { month: "Mar", amount: 800000 },
-    { month: "Apr", amount: 1600000 },
-    { month: "May", amount: 2100000 },
-    { month: "Jun", amount: 1800000 },
-  ]
+  return monthlyCollections
 }
 
 export const getPropertyOccupancyData = () => {
-  const occupied = properties.filter((p) => p.status === "Rented").length
-  const vacant = properties.filter((p) => p.status === "Open").length
-  return { occupied, vacant }
+  return occupancyData
 }
 
 // Export all data as demoData object

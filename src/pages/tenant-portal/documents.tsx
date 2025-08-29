@@ -1,290 +1,313 @@
 "use client"
 
+import type React from "react"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { FileText, Download, Upload, Eye, Calendar, File } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { ArrowLeft, Upload, FileText, Download, Eye, Calendar, CheckCircle, Clock, AlertCircle } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useState } from "react"
+
+interface Document {
+  id: string
+  name: string
+  type: string
+  category: "lease" | "id" | "income" | "other"
+  status: "approved" | "pending" | "rejected"
+  uploadDate: Date
+  size: string
+}
+
+const mockDocuments: Document[] = [
+  {
+    id: "1",
+    name: "Lease Agreement 2024.pdf",
+    type: "PDF",
+    category: "lease",
+    status: "approved",
+    uploadDate: new Date("2024-01-01"),
+    size: "2.4 MB",
+  },
+  {
+    id: "2",
+    name: "National ID Copy.pdf",
+    type: "PDF",
+    category: "id",
+    status: "approved",
+    uploadDate: new Date("2024-01-01"),
+    size: "1.2 MB",
+  },
+  {
+    id: "3",
+    name: "Employment Letter.pdf",
+    type: "PDF",
+    category: "income",
+    status: "pending",
+    uploadDate: new Date("2024-02-15"),
+    size: "856 KB",
+  },
+]
 
 export default function TenantDocuments() {
-  // Mock documents data - in real app, this would be fetched from API
-  const documents = [
-    {
-      id: "1",
-      name: "Lease Agreement",
-      type: "PDF",
-      category: "Legal",
-      uploadDate: "2024-01-01",
-      size: "2.5 MB",
-      status: "Active",
-      description: "Main lease agreement document",
-    },
-    {
-      id: "2",
-      name: "Property Inspection Report",
-      type: "PDF",
-      category: "Inspection",
-      uploadDate: "2024-01-05",
-      size: "1.8 MB",
-      status: "Completed",
-      description: "Initial property condition report",
-    },
-    {
-      id: "3",
-      name: "Tenant ID Copy",
-      type: "PDF",
-      category: "Identity",
-      uploadDate: "2024-01-01",
-      size: "0.5 MB",
-      status: "Verified",
-      description: "Copy of tenant identification",
-    },
-    {
-      id: "4",
-      name: "Payment Receipt - January",
-      type: "PDF",
-      category: "Payment",
-      uploadDate: "2024-01-15",
-      size: "0.3 MB",
-      status: "Processed",
-      description: "January 2024 rent payment receipt",
-    },
-    {
-      id: "5",
-      name: "Payment Receipt - February",
-      type: "PDF",
-      category: "Payment",
-      uploadDate: "2024-02-15",
-      size: "0.3 MB",
-      status: "Processed",
-      description: "February 2024 rent payment receipt",
-    },
-    {
-      id: "6",
-      name: "Maintenance Request Form",
-      type: "PDF",
-      category: "Maintenance",
-      uploadDate: "2024-03-10",
-      size: "0.8 MB",
-      status: "Pending",
-      description: "Kitchen faucet repair request",
-    },
-  ]
+  const [documents] = useState<Document[]>(mockDocuments)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [category, setCategory] = useState<string>("")
 
-  const documentSummary = {
-    total: documents.length,
-    active: documents.filter((d) => d.status === "Active" || d.status === "Verified").length,
-    pending: documents.filter((d) => d.status === "Pending").length,
-  }
-
-  const getStatusBadge = (status: string) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case "Active":
-        return <Badge variant="secondary">Active</Badge>
-      case "Verified":
-        return <Badge variant="secondary">Verified</Badge>
-      case "Completed":
-        return <Badge variant="outline">Completed</Badge>
-      case "Processed":
-        return <Badge variant="outline">Processed</Badge>
-      case "Pending":
-        return <Badge variant="destructive">Pending</Badge>
+      case "approved":
+        return <CheckCircle className="h-4 w-4 text-green-600" />
+      case "pending":
+        return <Clock className="h-4 w-4 text-orange-600" />
+      case "rejected":
+        return <AlertCircle className="h-4 w-4 text-red-600" />
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <FileText className="h-4 w-4" />
     }
   }
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Legal":
-        return "text-blue-600"
-      case "Payment":
-        return "text-green-600"
-      case "Maintenance":
-        return "text-orange-600"
-      case "Identity":
-        return "text-purple-600"
-      case "Inspection":
-        return "text-red-600"
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "approved":
+        return "bg-green-100 text-green-800"
+      case "pending":
+        return "bg-orange-100 text-orange-800"
+      case "rejected":
+        return "bg-red-100 text-red-800"
       default:
-        return "text-gray-600"
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+    }
+  }
+
+  const handleUpload = () => {
+    if (selectedFile && category) {
+      // In a real app, this would upload the file
+      console.log("Uploading file:", selectedFile.name, "Category:", category)
+      setSelectedFile(null)
+      setCategory("")
     }
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">My Documents</h1>
-          <p className="text-muted-foreground">Manage your rental documents and files</p>
-        </div>
-        <Button asChild variant="outline">
-          <Link to="/tenant-portal/dashboard">Back to Dashboard</Link>
+    <div className="container py-6">
+      <div className="mb-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/tenant-portal/dashboard">Dashboard</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Documents</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
+      <div className="mb-6">
+        <Button variant="outline" asChild className="mb-4 bg-transparent">
+          <Link to="/tenant-portal/dashboard">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
         </Button>
+        <h1 className="text-3xl font-bold mb-2">My Documents</h1>
+        <p className="text-muted-foreground">Upload and manage your rental documents</p>
       </div>
 
-      {/* Document Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{documentSummary.total}</div>
-            <p className="text-xs text-muted-foreground">All uploaded documents</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6">
+        {/* Document Summary */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{documents.length}</div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Documents</CardTitle>
-            <File className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{documentSummary.active}</div>
-            <p className="text-xs text-muted-foreground">Currently active</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{documentSummary.pending}</div>
-            <p className="text-xs text-muted-foreground">Awaiting approval</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Upload New Document */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Upload New Document
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="document-name">Document Name</Label>
-              <Input id="document-name" placeholder="Enter document name" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="document-category">Category</Label>
-              <select id="document-category" className="w-full p-2 border rounded-md">
-                <option value="">Select category</option>
-                <option value="Legal">Legal</option>
-                <option value="Payment">Payment</option>
-                <option value="Maintenance">Maintenance</option>
-                <option value="Identity">Identity</option>
-                <option value="Inspection">Inspection</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="document-file">Choose File</Label>
-              <Input id="document-file" type="file" accept=".pdf,.doc,.docx,.jpg,.png" />
-            </div>
-            <div className="md:col-span-2">
-              <Button className="w-full md:w-auto">
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Document
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Documents List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Document Library
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {documents.map((document, index) => (
-              <div key={document.id}>
-                <div className="flex items-center justify-between py-4">
-                  <div className="flex items-start gap-4">
-                    <div className="p-2 bg-muted rounded-lg">
-                      <FileText className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{document.name}</h4>
-                        {getStatusBadge(document.status)}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{document.description}</p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className={getCategoryColor(document.category)}>{document.category}</span>
-                        <span>{document.type}</span>
-                        <span>{document.size}</span>
-                        <span>Uploaded: {new Date(document.uploadDate).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Download className="h-4 w-4 mr-1" />
-                      Download
-                    </Button>
-                  </div>
-                </div>
-                {index < documents.length - 1 && <Separator />}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Approved</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {documents.filter((d) => d.status === "approved").length}
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      {/* Document Categories */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Document Categories</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-2 text-blue-600">Legal Documents</h4>
-              <p className="text-sm text-muted-foreground">Lease agreements, contracts, and legal papers</p>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending</CardTitle>
+              <Clock className="h-4 w-4 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">
+                {documents.filter((d) => d.status === "pending").length}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+              <AlertCircle className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">
+                {documents.filter((d) => d.status === "rejected").length}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Upload Document */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Upload New Document
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="file">Select File</Label>
+                <Input id="file" type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
+                {selectedFile && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Document Category</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lease">Lease Agreement</SelectItem>
+                    <SelectItem value="id">Identification</SelectItem>
+                    <SelectItem value="income">Income Proof</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-2 text-green-600">Payment Records</h4>
-              <p className="text-sm text-muted-foreground">Receipts, payment confirmations, and financial records</p>
+            <Button onClick={handleUpload} disabled={!selectedFile || !category} className="mt-4">
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Document
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Document List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Document Library</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {documents.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No documents uploaded yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {documents.map((document) => (
+                  <div key={document.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-muted rounded-full">
+                        <FileText className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{document.name}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          <span>Uploaded {document.uploadDate.toLocaleDateString()}</span>
+                          <span>•</span>
+                          <span>{document.size}</span>
+                          <span>•</span>
+                          <span className="capitalize">{document.category}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={getStatusColor(document.status)}>
+                        <span className="flex items-center gap-1">
+                          {getStatusIcon(document.status)}
+                          {document.status}
+                        </span>
+                      </Badge>
+                      <Button variant="outline" size="sm">
+                        <Eye className="mr-2 h-3 w-3" />
+                        View
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-3 w-3" />
+                        Download
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Document Categories Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Document Categories</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <h4 className="font-medium mb-2">Required Documents</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Lease Agreement (signed copy)</li>
+                  <li>• National ID or Passport</li>
+                  <li>• Proof of Income (employment letter/payslip)</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Optional Documents</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Bank Statements</li>
+                  <li>• References</li>
+                  <li>• Insurance Documents</li>
+                </ul>
+              </div>
             </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-2 text-orange-600">Maintenance</h4>
-              <p className="text-sm text-muted-foreground">Repair requests, maintenance reports, and work orders</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-2 text-purple-600">Identity</h4>
-              <p className="text-sm text-muted-foreground">ID copies, passport, and identification documents</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-2 text-red-600">Inspection</h4>
-              <p className="text-sm text-muted-foreground">Property condition reports and inspection documents</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-2 text-gray-600">Other</h4>
-              <p className="text-sm text-muted-foreground">Miscellaneous documents and files</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
