@@ -1,21 +1,20 @@
 "use client"
 
 import type * as React from "react"
-import { Link, useLocation } from "react-router-dom"
+import { useLocation, Link } from "react-router-dom"
 import {
   Building2,
   Users,
   CreditCard,
   BarChart3,
-  Settings,
   Home,
+  Settings,
   FileText,
   Bell,
   Wrench,
-  LogOut,
   User,
+  LogOut,
   ChevronUp,
-  Building,
 } from "lucide-react"
 
 import {
@@ -63,6 +62,7 @@ const navMain = [
   },
 ]
 
+// Additional tools
 const navTools = [
   {
     title: "Maintenance",
@@ -84,12 +84,6 @@ const navTools = [
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
 
-  const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated")
-    localStorage.removeItem("userRole")
-    window.location.href = "/login"
-  }
-
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -98,7 +92,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild>
               <Link to="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Building className="size-4" />
+                  <Building2 className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">RentFlow Pro</span>
@@ -117,7 +111,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               {navMain.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === item.url || location.pathname.startsWith(item.url + "/")}
+                  >
                     <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -175,16 +172,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 sideOffset={4}
               >
                 <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <User />
+                  Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                  <Settings />
+                  Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                <DropdownMenuItem>
+                  <LogOut />
+                  Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -1,8 +1,8 @@
 "use client"
 
 import type * as React from "react"
-import { Link, useLocation } from "react-router-dom"
-import { Home, Building2, CreditCard, FileText, LogOut, User, ChevronUp, Users } from "lucide-react"
+import { useLocation, Link } from "react-router-dom"
+import { Home, Building2, CreditCard, FileText, User, LogOut, ChevronUp } from "lucide-react"
 
 import {
   Sidebar,
@@ -20,8 +20,8 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-// Navigation items for tenant portal
-const navMain = [
+// Tenant navigation items
+const tenantNav = [
   {
     title: "Dashboard",
     url: "/tenant-portal/dashboard",
@@ -47,12 +47,6 @@ const navMain = [
 export function TenantPortalSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
 
-  const handleLogout = () => {
-    localStorage.removeItem("tenantAuthenticated")
-    localStorage.removeItem("tenantId")
-    window.location.href = "/tenant-portal/login"
-  }
-
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -61,11 +55,11 @@ export function TenantPortalSidebar({ ...props }: React.ComponentProps<typeof Si
             <SidebarMenuButton size="lg" asChild>
               <Link to="/tenant-portal/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Users className="size-4" />
+                  <Building2 className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Tenant Portal</span>
-                  <span className="truncate text-xs">RentFlow Pro</span>
+                  <span className="truncate font-semibold">RentFlow Pro</span>
+                  <span className="truncate text-xs">Tenant Portal</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -78,7 +72,7 @@ export function TenantPortalSidebar({ ...props }: React.ComponentProps<typeof Si
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navMain.map((item) => (
+              {tenantNav.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={location.pathname === item.url}>
                     <Link to={item.url}>
@@ -108,7 +102,7 @@ export function TenantPortalSidebar({ ...props }: React.ComponentProps<typeof Si
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">John Doe</span>
-                    <span className="truncate text-xs">tenant@example.com</span>
+                    <span className="truncate text-xs">john@example.com</span>
                   </div>
                   <ChevronUp className="ml-auto size-4" />
                 </SidebarMenuButton>
@@ -120,12 +114,12 @@ export function TenantPortalSidebar({ ...props }: React.ComponentProps<typeof Si
                 sideOffset={4}
               >
                 <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <User />
+                  Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                <DropdownMenuItem>
+                  <LogOut />
+                  Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
