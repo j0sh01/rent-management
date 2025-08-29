@@ -1,11 +1,5 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { Outlet, useNavigate } from "react-router-dom"
-import { Loader2 } from "lucide-react"
-import { TenantPortalSidebar } from "../components/tenant-portal-sidebar"
-import { ThemeToggle } from "../components/theme-toggle"
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { Outlet } from "react-router-dom"
+import { TenantPortalSidebar } from "@/components/tenant-portal-sidebar"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,42 +9,13 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { ThemeToggle } from "@/components/theme-toggle"
 
-export default function TenantPortalLayout() {
-  const navigate = useNavigate()
-  const [isLoading, setIsLoading] = useState(true)
-  const [tenant, setTenant] = useState<any>(null)
-
-  useEffect(() => {
-    // Check if tenant is logged in
-    const storedTenant = localStorage.getItem("tenant")
-    if (!storedTenant) {
-      navigate("/tenant-portal/login")
-      return
-    }
-
-    try {
-      const parsedTenant = JSON.parse(storedTenant)
-      setTenant(parsedTenant)
-    } catch (error) {
-      navigate("/tenant-portal/login")
-      return
-    }
-
-    setIsLoading(false)
-  }, [navigate])
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
+export function TenantPortalLayout() {
   return (
     <SidebarProvider>
-      <TenantPortalSidebar tenant={tenant} />
+      <TenantPortalSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
@@ -58,7 +23,7 @@ export default function TenantPortalLayout() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="/tenant-portal/dashboard">Tenant Portal</BreadcrumbLink>
+                <BreadcrumbLink href="/tenant-portal">Tenant Portal</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
@@ -70,9 +35,9 @@ export default function TenantPortalLayout() {
             <ThemeToggle />
           </div>
         </header>
-        <main className="flex-1 bg-muted/30">
+        <div className="flex flex-1 flex-col gap-4 p-4">
           <Outlet />
-        </main>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )

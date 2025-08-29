@@ -3,18 +3,19 @@
 import type * as React from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
-  Building,
-  LayoutDashboard,
-  Home,
+  Building2,
   Users,
   CreditCard,
   BarChart3,
   Settings,
+  Home,
+  FileText,
+  Bell,
+  Wrench,
   LogOut,
   User,
-  FileText,
-  Wrench,
-  Bell,
+  ChevronUp,
+  Building,
 } from "lucide-react"
 
 import {
@@ -30,20 +31,20 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 // Navigation items
-const navItems = [
+const navMain = [
   {
     title: "Dashboard",
     url: "/dashboard",
-    icon: LayoutDashboard,
+    icon: Home,
   },
   {
     title: "Properties",
     url: "/dashboard/properties",
-    icon: Home,
+    icon: Building2,
   },
   {
     title: "Tenants",
@@ -62,8 +63,7 @@ const navItems = [
   },
 ]
 
-// Additional items
-const additionalItems = [
+const navTools = [
   {
     title: "Maintenance",
     url: "/dashboard/maintenance",
@@ -81,33 +81,41 @@ const additionalItems = [
   },
 ]
 
-export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sidebar> & { user?: any }) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
 
   const handleLogout = () => {
-    localStorage.removeItem("user")
+    localStorage.removeItem("isAuthenticated")
+    localStorage.removeItem("userRole")
     window.location.href = "/login"
   }
 
   return (
-    <Sidebar {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2">
-          <Building className="h-8 w-8 text-primary" />
-          <div className="flex flex-col">
-            <span className="font-bold text-lg">RentFlow Pro</span>
-            <span className="text-xs text-muted-foreground">Property Management</span>
-          </div>
-        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link to="/dashboard">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <Building className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">RentFlow Pro</span>
+                  <span className="truncate text-xs">Property Management</span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Main Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {navMain.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={location.pathname === item.url}>
                     <Link to={item.url}>
@@ -121,12 +129,11 @@ export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sideb
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Additional Features */}
         <SidebarGroup>
           <SidebarGroupLabel>Tools</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {additionalItems.map((item) => (
+              {navTools.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={location.pathname === item.url}>
                     <Link to={item.url}>
@@ -146,18 +153,27 @@ export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sideb
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="w-full">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src="/placeholder-user.jpg" />
-                    <AvatarFallback>{user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}</AvatarFallback>
+                <SidebarMenuButton
+                  size="lg"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                >
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarImage src="/placeholder-user.jpg" alt="Admin" />
+                    <AvatarFallback className="rounded-lg">AD</AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col items-start text-left">
-                    <span className="text-sm font-medium">{user?.name || "User"}</span>
-                    <span className="text-xs text-muted-foreground">{user?.email || "user@example.com"}</span>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">Admin User</span>
+                    <span className="truncate text-xs">admin@rentflow.com</span>
                   </div>
+                  <ChevronUp className="ml-auto size-4" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" className="w-56">
+              <DropdownMenuContent
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                side="bottom"
+                align="end"
+                sideOffset={4}
+              >
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>

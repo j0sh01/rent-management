@@ -1,11 +1,5 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { Outlet, useNavigate } from "react-router-dom"
-import { Loader2 } from "lucide-react"
-import { AppSidebar } from "../../components/app-sidebar"
-import { ThemeToggle } from "../components/theme-toggle"
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { Outlet } from "react-router-dom"
+import { AppSidebar } from "@/components/app-sidebar"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,42 +9,13 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { ThemeToggle } from "@/components/theme-toggle"
 
-export default function DashboardLayout() {
-  const navigate = useNavigate()
-  const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
-
-  useEffect(() => {
-    // Check if user is logged in
-    const storedUser = localStorage.getItem("user")
-    if (!storedUser) {
-      navigate("/login")
-      return
-    }
-
-    try {
-      const parsedUser = JSON.parse(storedUser)
-      setUser(parsedUser)
-    } catch (error) {
-      navigate("/login")
-      return
-    }
-
-    setIsLoading(false)
-  }, [navigate])
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
+export function DashboardLayout() {
   return (
     <SidebarProvider>
-      <AppSidebar user={user} />
+      <AppSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
@@ -70,9 +35,9 @@ export default function DashboardLayout() {
             <ThemeToggle />
           </div>
         </header>
-        <main className="flex-1 bg-muted/30">
+        <div className="flex flex-1 flex-col gap-4 p-4">
           <Outlet />
-        </main>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )
