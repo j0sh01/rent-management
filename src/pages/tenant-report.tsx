@@ -55,6 +55,10 @@ export default function TenantReport() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
+              <p className="text-sm text-muted-foreground">Name</p>
+              <p className="font-medium">{tenant.name}</p>
+            </div>
+            <div>
               <p className="text-sm text-muted-foreground">Email</p>
               <p className="font-medium">{tenant.email}</p>
             </div>
@@ -63,13 +67,29 @@ export default function TenantReport() {
               <p className="font-medium">{tenant.contact}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Property</p>
-              <p className="font-medium">{property?.name || "Unknown"}</p>
-            </div>
-            <div>
               <p className="text-sm text-muted-foreground">Status</p>
               <p className="font-medium">{tenant.status}</p>
             </div>
+            {property && (
+              <>
+                <div>
+                  <p className="text-sm text-muted-foreground">Property</p>
+                  <p className="font-medium">{property.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Monthly Rent</p>
+                  <p className="font-medium">TZS {tenant.rentAmount.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Lease Start</p>
+                  <p className="font-medium">{tenant.leaseStart.toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Lease End</p>
+                  <p className="font-medium">{tenant.leaseEnd.toLocaleDateString()}</p>
+                </div>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
